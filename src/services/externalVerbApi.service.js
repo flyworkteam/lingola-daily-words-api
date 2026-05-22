@@ -1,6 +1,6 @@
-require('dotenv').config();
+import 'dotenv/config';
 
-async function fetchWordsByLevelFromExternalApi({
+export async function fetchWordsByLevelFromExternalApi({
   level,
   targetLang = 'tr',
   limit = 10,
@@ -76,7 +76,3 @@ async function fetchWordsByLevelFromExternalApi({
     throw error;
   }
 }
-
-module.exports = {
-  fetchWordsByLevelFromExternalApi,
-};
