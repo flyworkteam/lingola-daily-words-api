@@ -1,0 +1,292 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(cuid())
+  firebaseUid String    @unique
+  email       String?
+  displayName String?
+  photoUrl    String?
+  provider    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  lessonProgress        UserLessonProgress[]
+  vocabularyProgress    UserVocabularyProgress[]
+  learningProfile       UserLearningProfile?
+  dailyActivities       UserDailyActivity[]
+  dailyRewardProgresses UserDailyRewardProgress[]
+  dailyShareRewards     UserDailyShareReward[]
+  stats                 UserStats?
+  idempotencyRecords    RequestIdempotency[]
+}
+
+model RequestIdempotency {
+  id             String   @id @default(cuid())
+  userId         String
+  scope          String   @db.VarChar(64)
+  idempotencyKey String   @db.VarChar(128)
+  statusCode     Int
+  responseBody   Json
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scope, idempotencyKey])
+  @@index([expiresAt])
+}
+
+model UserStats {
+  id      String @id @default(cuid())
+  userId  String @unique
+  coins   Int    @default(0)
+  gems    Int    @default(0)
+  xp      Int    @default(0)
+  totalXp Int    @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLearningProfile {
+  id                String @id @default(cuid())
+  userId            String @unique
+  currentLevel      String @default("A1")
+  currentDifficulty Int    @default(1)
+  targetLang        String @default("tr")
+  sourceLang        String @default("en")
+  dailyGoal         Int    @default(10)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserDailyActivity {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime
+
+  seenCount      Int @default(0)
+  correctCount   Int @default(0)
+  wrongCount     Int @default(0)
+  completedCount Int @default(0)
+
+  studySeconds    Int     @default(0)
+  isGoalCompleted Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model UserDailyRewardProgress {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime
+
+  learnedWordCount      Int @default(0)
+  speakingPracticeCount Int @default(0)
+  testAnswerCount       Int @default(0)
+  reviewWordCount       Int @default(0)
+  reviewCorrectCount    Int @default(0)
+
+  learnedRewardClaimCount  Int @default(0)
+  speakingRewardClaimCount Int @default(0)
+  testRewardClaimCount     Int @default(0)
+  reviewRewardClaimCount   Int @default(0)
+
+  earnedGems Int @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model UserDailyShareReward {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime
+  rewardGems Int      @default(5)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}
+
+model Language {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons Lesson[]
+}
+
+model Level {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  order     Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons         Lesson[]
+  vocabularyItems VocabularyItem[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons         Lesson[]
+  vocabularyItems VocabularyItem[]
+}
+
+model Lesson {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  order       Int     @default(0)
+  isFree      Boolean @default(true)
+  isActive    Boolean @default(true)
+
+  languageId String
+  levelId    String
+  categoryId String
+
+  language Language @relation(fields: [languageId], references: [id])
+  level    Level    @relation(fields: [levelId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  items    LessonItem[]
+  progress UserLessonProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LessonItem {
+  id            String  @id @default(cuid())
+  lessonId      String
+  type          String
+  sourceText    String
+  targetText    String
+  example       String?
+  pronunciation String?
+  order         Int     @default(0)
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model UserLessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  progress    Int       @default(0)
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, lessonId])
+}
+
+model VocabularyItem {
+  id                 String  @id @default(cuid())
+  sourceText         String
+  targetText         String
+  sourceLang         String  @default("en")
+  targetLang         String  @default("tr")
+  pronunciationText  String?
+  exampleSentence    String?
+  exampleTranslation String?
+  audioUrl           String?
+  type               String  @default("word")
+  difficultyScore    Int     @default(1)
+  levelId            String
+  categoryId         String?
+  order              Int     @default(0)
+  isActive           Boolean @default(true)
+
+  level    Level     @relation(fields: [levelId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  progress     UserVocabularyProgress[]
+  translations VocabularyTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VocabularyTranslation {
+  id                 String  @id @default(cuid())
+  vocabularyItemId   String
+  targetLang         String
+  targetText         String
+  exampleTranslation String?
+
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([vocabularyItemId, targetLang])
+}
+
+model UserVocabularyProgress {
+  id                String    @id @default(cuid())
+  userId            String
+  vocabularyItemId  String
+  status            String    @default("learning")
+  seenCount         Int       @default(0)
+  correctCount      Int       @default(0)
+  wrongCount        Int       @default(0)
+  totalAnswerTimeMs Int       @default(0)
+  answerCount       Int       @default(0)
+  lastSeenAt        DateTime?
+  learnedAt         DateTime?
+  isSaved           Boolean   @default(false)
+
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vocabularyItem VocabularyItem @relation(fields: [vocabularyItemId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, vocabularyItemId])
+}

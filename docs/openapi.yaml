@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: Lingola Daily Words API
+  version: 0.2.0
+  description: Backend API for Lingola Daily Words mobile app.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: Health
+  - name: Auth
+  - name: Admin
+  - name: Progress
+  - name: Rewards
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check with database ping
+      responses:
+        '200':
+          description: Service and database are healthy
+        '503':
+          description: Database unreachable
+
+  /api/v1/auth/session:
+    post:
+      tags: [Auth]
+      summary: Create or update user from Firebase ID token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken:
+                  type: string
+      responses:
+        '200':
+          description: Session established
+
+  /api/v1/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user
+      security:
+        - FirebaseBearer: []
+      responses:
+        '200':
+          description: Current user profile
+
+  /api/admin/import-words:
+    post:
+      tags: [Admin]
+      summary: Import vocabulary words for a level
+      security:
+        - AdminApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [level]
+              properties:
+                level:
+                  type: string
+                  example: A1
+                targetLang:
+                  type: string
+                  default: tr
+                limit:
+                  type: integer
+                  default: 50
+                offset:
+                  type: integer
+                  default: 0
+      responses:
+        '200':
+          description: Import completed
+        '401':
+          description: Invalid admin API key
+        '503':
+          description: Admin API key not configured
+
+  /api/progress/daily-reward/record:
+    post:
+      tags: [Progress]
+      summary: Record daily reward progress and apply gem claims
+      security:
+        - FirebaseBearer: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+          description: Optional key to safely retry the same request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type]
+              properties:
+                type:
+                  type: string
+                amount:
+                  type: integer
+      responses:
+        '200':
+          description: Progress recorded
+
+  /api/rewards/streak-share/claim:
+    post:
+      tags: [Rewards]
+      summary: Claim daily streak share reward
+      security:
+        - FirebaseBearer: []
+      parameters:
+        - in: header
+          name: Idempotency-Key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reward claimed
+        '409':
+          description: Already claimed today
+
+components:
+  securitySchemes:
+    FirebaseBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+    AdminApiKey:
+      type: apiKey
+      in: header
+      name: X-Admin-Api-Key
