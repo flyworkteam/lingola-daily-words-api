@@ -17,7 +17,14 @@ const env = {
   FIREBASE_SERVICE_ACCOUNT_JSON: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim(),
   FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim(),
   ADMIN_API_KEY: process.env.ADMIN_API_KEY?.trim() || "",
-  ADMIN_IP_ALLOWLIST: parseCsv(process.env.ADMIN_IP_ALLOWLIST)
+  ADMIN_IP_ALLOWLIST: parseCsv(process.env.ADMIN_IP_ALLOWLIST),
+  CDN_HOSTNAME: process.env.CDN_HOSTNAME?.trim() || "",
+  CDN_USERNAME: process.env.CDN_USERNAME?.trim() || "",
+  CDN_PASSWORD: process.env.CDN_PASSWORD?.trim() || "",
+  CDN_BASE_URL: (() => {
+    const hostname = process.env.CDN_HOSTNAME?.trim();
+    return hostname ? `https://${hostname}` : "";
+  })()
 };
 function validateStartupConfig() {
   if (!env.FIREBASE_SERVICE_ACCOUNT_JSON && !env.FIREBASE_SERVICE_ACCOUNT_PATH) {
