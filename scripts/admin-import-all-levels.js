@@ -1,4 +1,10 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import fs from 'node:fs';
+
+dotenv.config();
+if (fs.existsSync('.env.local')) {
+  dotenv.config({ path: '.env.local', override: true });
+}
 
 const port = process.env.PORT ?? 3000;
 const host = process.env.HOST?.trim() || '127.0.0.1';

@@ -11,6 +11,7 @@
     "db:setup": "npm run db:migrate && npm run db:seed",
     "production:setup": "npm run db:migrate && npm run db:seed",
     "admin:import-all": "node scripts/admin-import-all-levels.js",
+    "import:c1-c2": "node scripts/import-c1-c2-words.js",
     "package:customer": "bash scripts/package-for-customer.sh"
   },
   "engines": {
