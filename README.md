@@ -4,13 +4,22 @@ Firebase Authentication ile giriş yapan mobil kullanıcıları doğrular, kelim
 
 **Stack:** Node.js (ES modules), Express, **klasik JavaScript**, **mysql2** paketi (MySQL 8 kimlik doğrulaması; Prisma / TypeScript yok).
 
+## SSH erişiminiz yoksa (özet)
+
+- **Siz (Mac):** `.env.local` + yerel MySQL → `npm run dev` → Flutter `http://<Mac-IP>:3000`
+- **Canlı (müşteri):** API müşteri sunucusunda kurulmalı → Flutter `http://5.39.8.160:3000`
+- Uzak MySQL Mac’ten genelde **kapalı** (timeout); bu beklenen davranış.
+
+Ayrıntı: [`docs/SSH-ERISIMI-YOK.md`](docs/SSH-ERISIMI-YOK.md) · Müşteriye gönderilecek: [`docs/MUSTERI-KURULUM.md`](docs/MUSTERI-KURULUM.md) · Paket: `npm run package:customer`
+
 ## Kurulum (yerel)
 
-Müşteri SSH veremiyorsa **uzak MySQL kullanmayın**; yerel MySQL ile geliştirin.
+Müşteri sunucusuna erişiminiz yoksa **uzak MySQL kullanmayın**; `.env.local` ile yerel MySQL kullanın.
 
 ```bash
 cd "LingolaDaily WordsBackend"
 cp .env.example .env
+cp .env.local.example .env.local
 mkdir -p secrets
 ```
 
@@ -41,6 +50,14 @@ npm run dev
 API: `http://localhost:3000` — `GET /health` → `{"ok":true,"database":"up"}`
 
 Mobil uygulama API adresi: `http://<bilgisayar-ip>:3000` (simülatörde genelde `http://localhost:3000`).
+
+**Müşteri sunucusu (5.39.8.160):** [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — kurulum, migration, kelime import.  
+**Flutter:** [`docs/FLUTTER.md`](docs/FLUTTER.md) — auth akışı ve vocabulary endpoint’leri.
+
+```bash
+npm run production:setup   # sunucuda: migrate + örnek kelimeler
+npm run admin:import-all # harici API'den tüm seviyeleri içe aktar
+```
 
 ## Veritabanı
 

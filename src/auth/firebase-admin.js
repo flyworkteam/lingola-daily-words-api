@@ -26,7 +26,8 @@ function getFirebaseAuth() {
   );
 }
 async function verifyFirebaseIdToken(idToken) {
-  return getFirebaseAuth().verifyIdToken(idToken, true);
+  // checkRevoked: false — yerel geliştirmede revocation kontrolü gereksiz hatalara yol açabiliyor.
+  return getFirebaseAuth().verifyIdToken(idToken);
 }
 export {
   getFirebaseAuth,

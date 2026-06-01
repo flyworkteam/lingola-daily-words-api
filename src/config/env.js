@@ -1,4 +1,10 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import fs from "node:fs";
+
+dotenv.config();
+if (fs.existsSync(".env.local")) {
+  dotenv.config({ path: ".env.local", override: true });
+}
 function required(name) {
   const v = process.env[name]?.trim();
   if (!v) throw new Error(`Missing required env: ${name}`);
@@ -13,6 +19,7 @@ function parseCsv(value) {
 const env = {
   PORT: Number(process.env.PORT ?? 3e3),
   HOST: process.env.HOST?.trim() || "0.0.0.0",
+  PUBLIC_API_BASE_URL: process.env.PUBLIC_API_BASE_URL?.trim() || "",
   DATABASE_URL: required("DATABASE_URL"),
   FIREBASE_SERVICE_ACCOUNT_JSON: process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim(),
   FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim(),

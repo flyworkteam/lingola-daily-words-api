@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import { env } from "./config/env.js";
 import { checkDatabaseHealth } from "./health/check.js";
 import { errorMiddleware } from "./http/error-middleware.js";
 import { router as v1Router } from "./routes/index.js";
@@ -23,6 +24,7 @@ function createApp() {
     res.json({
       ok: true,
       name: "lingola-daily-words-backend",
+      ...(env.PUBLIC_API_BASE_URL ? { publicApiBaseUrl: env.PUBLIC_API_BASE_URL } : {}),
       endpoints: [
         "/health",
         "/api/v1/auth/session",

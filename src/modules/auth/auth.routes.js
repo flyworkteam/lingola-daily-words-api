@@ -4,6 +4,7 @@ import { asyncHandler } from "../../http/async-handler.js";
 import { ApiError } from "../../http/api-error.js";
 import { ok } from "../../http/response.js";
 import { verifyFirebaseIdToken } from "../../auth/firebase-admin.js";
+import { toAuthApiError } from "../../auth/auth-errors.js";
 import { requireFirebaseUser } from "../../auth/require-firebase-user.js";
 import { toPublicUser, upsertUserFromFirebaseToken } from "./auth.service.js";
 const router = Router();
@@ -14,9 +15,13 @@ router.post(
   "/session",
   asyncHandler(async (req, res) => {
     const { idToken } = sessionBody.parse(req.body);
-    const decoded = await verifyFirebaseIdToken(idToken);
-    const user = await upsertUserFromFirebaseToken(decoded);
-    return ok(res, { user: toPublicUser(user) }, 200);
+    try {
+      const decoded = await verifyFirebaseIdToken(idToken);
+      const user = await upsertUserFromFirebaseToken(decoded);
+      return ok(res, { user: toPublicUser(user) }, 200);
+    } catch (error) {
+      throw toAuthApiError(error);
+    }
   })
 );
 router.get(

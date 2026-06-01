@@ -1,4 +1,5 @@
 import { upsertUserFromFirebase as upsertUserRow } from '../../db/repositories.js';
+import { ensureUserOnboarding } from '../../services/userOnboarding.service.js';
 
 function providerFromToken(decoded) {
   const provider = decoded.firebase?.sign_in_provider;
@@ -10,7 +11,7 @@ function providerFromToken(decoded) {
 
 export async function upsertUserFromFirebaseToken(decoded) {
   const now = new Date();
-  return upsertUserRow({
+  const user = await upsertUserRow({
     firebaseUid: decoded.uid,
     email: decoded.email ?? null,
     displayName: decoded.name ?? null,
@@ -18,6 +19,8 @@ export async function upsertUserFromFirebaseToken(decoded) {
     provider: providerFromToken(decoded),
     lastLoginAt: now,
   });
+  await ensureUserOnboarding(user.id);
+  return user;
 }
 
 export function toPublicUser(user) {

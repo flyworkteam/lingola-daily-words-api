@@ -8,7 +8,10 @@
     "start": "node src/server.js",
     "db:migrate": "node scripts/run-migrations.js",
     "db:seed": "node scripts/seed.js",
-    "db:setup": "npm run db:migrate && npm run db:seed"
+    "db:setup": "npm run db:migrate && npm run db:seed",
+    "production:setup": "npm run db:migrate && npm run db:seed",
+    "admin:import-all": "node scripts/admin-import-all-levels.js",
+    "package:customer": "bash scripts/package-for-customer.sh"
   },
   "engines": {
     "node": ">=20.11.0"
@@ -17,7 +20,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "firebase-admin": "^13.10.0",
+    "firebase-admin": "^10.3.0",
     "helmet": "^7.1.0",
     "mysql2": "^3.14.0",
     "zod": "^3.23.8"
