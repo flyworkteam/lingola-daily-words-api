@@ -12,14 +12,15 @@ import {
   resolveUserLanguagePair,
   translationLangsForQuery,
 } from '../services/vocabularyLanguage.service.js';
-import { buildLevelWhere } from '../services/vocabularyFilters.js';
 import {
   findAndCountVocabularyForUserLanguage,
+  findVocabularyForUserAtLevel,
   findVocabularyForUserLanguage,
   resolveRequestLanguagePair,
   resolveVocabularyContext,
 } from '../services/vocabularyQuery.service.js';
 import { FIXED_SOURCE_LANG } from "../constants/supportedLanguages.js";
+import { isDatabaseConnectionError } from "../db/db-errors.js";
 function sendSuccess(res, data, status = 200) {
   return res.status(status).json({ success: true, data });
 }
@@ -207,11 +208,16 @@ async function getVocabulary(req, res) {
     }
     const { languages, level } = await resolveVocabularyContext(req);
     const baseWhere = buildVocabularyWhere(req.query, level);
-    const items = await findVocabularyForUserLanguage(languages, {
-      where: baseWhere,
+    const listArgs = {
       orderBy: { order: "asc" },
-      ...limit !== null ? { take: limit } : {}
-    });
+      ...limit !== null ? { take: limit } : {},
+    };
+    const items = baseWhere.categorySlug
+      ? await findVocabularyForUserLanguage(languages, {
+          where: baseWhere,
+          ...listArgs,
+        })
+      : await findVocabularyForUserAtLevel(languages, level, listArgs);
     return sendSuccess(res, items);
   } catch (error) {
     console.error(error);
@@ -229,10 +235,9 @@ async function getCommonVocabulary(req, res) {
     }
     const level = await resolveVocabularyLevel(req.user.id, req.query.level);
     const languages = await resolveUserLanguagePair(req.user.id);
-    const items = await findVocabularyForUserLanguage(languages, {
-      where: buildLevelWhere(level),
+    const items = await findVocabularyForUserAtLevel(languages, level, {
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
-      take: limit
+      take: limit,
     });
     if (items.length === 0) {
       return sendSuccess(res, []);
@@ -276,7 +281,11 @@ async function getDailyWord(req, res) {
     if (error instanceof Error && error.message === "NO_VOCABULARY_FOR_DAILY_WORD") {
       return sendError(res, "No vocabulary available for daily word", 404);
     }
-    console.error(error);
+    if (isDatabaseConnectionError(error)) {
+      console.error("[getDailyWord] database error:", error);
+      return sendError(res, "Database unavailable", 503);
+    }
+    console.error("[getDailyWord] error:", error);
     return sendError(res, "Failed to fetch daily word");
   }
 }
@@ -349,9 +358,8 @@ async function getVocabularyReview(req, res) {
     }
     const level = await resolveVocabularyLevel(req.user.id, req.query.level);
     const languages = await resolveUserLanguagePair(req.user.id);
-    const rawItems = await findVocabularyForUserLanguage(languages, {
-      where: buildLevelWhere(level),
-      orderBy: { order: "asc" }
+    const rawItems = await findVocabularyForUserAtLevel(languages, level, {
+      orderBy: { order: "asc" },
     });
     if (rawItems.length === 0) {
       return sendSuccess(res, []);

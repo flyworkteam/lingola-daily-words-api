@@ -3,8 +3,7 @@ import {
   resolveVocabularyLevel
 } from "../services/dailyWord.service.js";
 import { resolveUserLanguagePair } from "../services/vocabularyLanguage.service.js";
-import { buildLevelAndDifficultyWhere } from '../services/vocabularyFilters.js';
-import { findVocabularyForUserLanguage } from '../services/vocabularyQuery.service.js';
+import { findVocabularyForUserAtLevelAndDifficulty } from '../services/vocabularyQuery.service.js';
 function sendSuccess(res, data, status = 200) {
   return res.status(status).json({ success: true, data });
 }
@@ -50,11 +49,15 @@ async function resolvePracticeLanguagesAndDifficulty(req) {
   return { languages, difficulty };
 }
 async function fetchPracticeVocabularyByLevelAndDifficulty(levelCode, difficulty, languages, limit) {
-  return findVocabularyForUserLanguage(languages, {
-    where: buildLevelAndDifficultyWhere(levelCode, difficulty),
-    orderBy: { order: "asc" },
-    ...limit !== void 0 ? { take: limit } : {}
-  });
+  return findVocabularyForUserAtLevelAndDifficulty(
+    languages,
+    levelCode,
+    difficulty,
+    {
+      orderBy: { order: "asc" },
+      ...limit !== void 0 ? { take: limit } : {},
+    },
+  );
 }
 function resolveSpeakingExampleSentence(sourceText, existing) {
   const trimmed = existing?.trim();

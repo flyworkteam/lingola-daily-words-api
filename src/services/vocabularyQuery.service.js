@@ -1,4 +1,5 @@
 import { countVocabularyItems, findVocabularyItems } from '../db/repositories.js';
+import { FIXED_SOURCE_LANG } from '../constants/supportedLanguages.js';
 import {
   applyVocabularyLanguageFilter,
   FALLBACK_TARGET_LANG,
@@ -15,6 +16,8 @@ import {
 } from './vocabularyFilters.js';
 
 export { buildLevelWhere, buildLevelAndDifficultyWhere };
+
+const DEFAULT_LEVEL = 'A1';
 
 export async function resolveRequestLanguagePair(req) {
   if (req.user) {
@@ -104,6 +107,75 @@ export async function findVocabularyForUserLanguage(languages, args) {
   }
 
   return items.map((item) => mapVocabularyItemForTargetLang(item, languages.targetLang));
+}
+
+async function findLegacyVocabularyItems(languages, filters, listArgs = {}) {
+  const legacyItems = await findVocabularyItems({
+    ...filters,
+    sourceLang: FIXED_SOURCE_LANG,
+    translationLangs: translationLangsForQuery(languages.targetLang),
+    orderBy: resolveOrderBy(listArgs.orderBy),
+    take: listArgs.take,
+    skip: listArgs.skip,
+  });
+
+  return legacyItems.map((item) =>
+    mapVocabularyItemForTargetLang(item, languages.targetLang),
+  );
+}
+
+async function fetchVocabularyWithLegacyFallback(languages, filters, listArgs = {}) {
+  let items = await findVocabularyForUserLanguage(languages, {
+    where: filters,
+    ...listArgs,
+  });
+
+  if (items.length === 0) {
+    items = await findLegacyVocabularyItems(languages, filters, listArgs);
+  }
+
+  return items;
+}
+
+export async function findVocabularyForUserAtLevel(languages, levelCode, listArgs = {}) {
+  let items = await fetchVocabularyWithLegacyFallback(
+    languages,
+    buildLevelWhere(levelCode),
+    listArgs,
+  );
+
+  if (items.length === 0 && levelCode !== DEFAULT_LEVEL) {
+    items = await fetchVocabularyWithLegacyFallback(
+      languages,
+      buildLevelWhere(DEFAULT_LEVEL),
+      listArgs,
+    );
+  }
+
+  return items;
+}
+
+export async function findVocabularyForUserAtLevelAndDifficulty(
+  languages,
+  levelCode,
+  difficulty,
+  listArgs = {},
+) {
+  let items = await fetchVocabularyWithLegacyFallback(
+    languages,
+    buildLevelAndDifficultyWhere(levelCode, difficulty),
+    listArgs,
+  );
+
+  if (items.length === 0 && levelCode !== DEFAULT_LEVEL) {
+    items = await fetchVocabularyWithLegacyFallback(
+      languages,
+      buildLevelAndDifficultyWhere(DEFAULT_LEVEL, difficulty),
+      listArgs,
+    );
+  }
+
+  return items;
 }
 
 export async function findAndCountVocabularyForUserLanguage(languages, args) {

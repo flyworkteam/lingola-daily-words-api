@@ -1,13 +1,7 @@
 import { findUserLearningProfile } from '../db/repositories.js';
 import { formatDateOnly, getTodayDateOnly } from './dailyActivity.service.js';
 import { resolveUserLanguagePair } from './vocabularyLanguage.service.js';
-import { findVocabularyItems } from '../db/repositories.js';
-import {
-  applyVocabularyLanguageFilter,
-  mapVocabularyItemForTargetLang,
-  translationLangsForQuery,
-} from './vocabularyLanguage.service.js';
-import { buildLevelWhere } from './vocabularyFilters.js';
+import { findVocabularyForUserAtLevel } from './vocabularyQuery.service.js';
 
 const DEFAULT_LEVEL = 'A1';
 const DEFAULT_DIFFICULTY = 1;
@@ -67,7 +61,7 @@ function toDailyWordPayload(item, date) {
       item.targetText,
       item.exampleTranslation,
     ),
-    level: item.level.code,
+    level: item.level?.code ?? DEFAULT_LEVEL,
     date,
   };
 }
@@ -114,29 +108,9 @@ export async function resolvePracticeDifficulty(userId, queryDifficulty) {
 }
 
 async function fetchActiveVocabularyByLevel(levelCode, languages) {
-  const preferred = languages.targetLang;
-  const filters = applyVocabularyLanguageFilter(buildLevelWhere(levelCode), languages, {
-    translationTargetLang: preferred,
+  return findVocabularyForUserAtLevel(languages, levelCode, {
+    orderBy: { order: 'asc' },
   });
-
-  let items = await findVocabularyItems({
-    ...filters,
-    translationLangs: translationLangsForQuery(preferred),
-    orderBy: 'order',
-  });
-
-  if (items.length === 0 && preferred !== 'tr') {
-    const fallbackFilters = applyVocabularyLanguageFilter(buildLevelWhere(levelCode), languages, {
-      translationTargetLang: 'tr',
-    });
-    items = await findVocabularyItems({
-      ...fallbackFilters,
-      translationLangs: translationLangsForQuery('tr'),
-      orderBy: 'order',
-    });
-  }
-
-  return items.map((item) => mapVocabularyItemForTargetLang(item, languages.targetLang));
 }
 
 export async function getDailyWordForUser(userId) {

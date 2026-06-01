@@ -566,6 +566,29 @@ function buildVocabularyWhere(filters, params) {
   return clauses.join(' AND ');
 }
 
+function appendSqlLimitOffset(sql, take, skip) {
+  if (take === undefined) {
+    return sql;
+  }
+
+  const limit = Number(take);
+  if (!Number.isInteger(limit) || limit < 0) {
+    throw new Error('Invalid LIMIT value');
+  }
+
+  let result = `${sql} LIMIT ${limit}`;
+
+  if (skip !== undefined) {
+    const offset = Number(skip);
+    if (!Number.isInteger(offset) || offset < 0) {
+      throw new Error('Invalid OFFSET value');
+    }
+    result += ` OFFSET ${offset}`;
+  }
+
+  return result;
+}
+
 export async function findVocabularyItems({
   levelCode,
   difficultyScore,
@@ -596,12 +619,7 @@ export async function findVocabularyItems({
   }
 
   if (take !== undefined) {
-    sql += ' LIMIT ?';
-    params.push(take);
-    if (skip !== undefined) {
-      sql += ' OFFSET ?';
-      params.push(skip);
-    }
+    sql = appendSqlLimitOffset(sql, take, skip);
   }
 
   const items = await query(sql, params);
