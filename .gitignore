@@ -8,3 +8,4 @@ database/*.db
 database/*.db-journal
 secrets/
 *.log
+.DS_Store
