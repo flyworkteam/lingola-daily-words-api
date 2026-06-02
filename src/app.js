@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import morgan from "morgan";
 import { env } from "./config/env.js";
 import { checkDatabaseHealth } from "./health/check.js";
 import { errorMiddleware } from "./http/error-middleware.js";
@@ -11,15 +12,22 @@ import { router as progressRouter } from "./routes/progress.routes.js";
 import { router as adminImportRouter } from "./routes/adminImport.routes.js";
 import { router as userRouter } from "./routes/user.routes.js";
 import { router as rewardsRouter } from "./routes/rewards.routes.js";
+
 function createApp() {
   const app = express();
+
   app.use(
     cors({
       origin: true,
-      credentials: true
+      credentials: true,
     })
   );
+
   app.use(express.json({ limit: "1mb" }));
+
+  // Request logger — "dev" modda renkli + kısa, production'da "combined" (Apache format)
+  app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
+
   app.get("/", (_req, res) => {
     res.json({
       ok: true,
@@ -53,10 +61,11 @@ function createApp() {
         "/api/rewards/daily/me",
         "/api/user/learning-profile",
         "/api/user/home-summary",
-        "/api/admin/import-words"
-      ]
+        "/api/admin/import-words",
+      ],
     });
   });
+
   app.get("/health", async (_req, res) => {
     const db = await checkDatabaseHealth();
     const status = db.ok ? 200 : 503;
@@ -64,9 +73,10 @@ function createApp() {
       ok: db.ok,
       database: db.database,
       latencyMs: db.latencyMs,
-      ...db.error ? { error: db.error } : {}
+      ...(db.error ? { error: db.error } : {}),
     });
   });
+
   app.use("/api/v1", v1Router);
   app.use("/api", learningRouter);
   app.use("/api/vocabulary", vocabularyRouter);
@@ -75,9 +85,10 @@ function createApp() {
   app.use("/api/user", userRouter);
   app.use("/api/rewards", rewardsRouter);
   app.use("/api/admin", adminImportRouter);
+
   app.use(errorMiddleware);
+
   return app;
 }
-export {
-  createApp
-};
+
+export { createApp };
