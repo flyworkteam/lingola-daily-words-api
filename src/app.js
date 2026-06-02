@@ -10,6 +10,7 @@ import { router as vocabularyRouter } from "./routes/vocabulary.routes.js";
 import { router as practiceRouter } from "./routes/practice.routes.js";
 import { router as progressRouter } from "./routes/progress.routes.js";
 import { router as adminImportRouter } from "./routes/adminImport.routes.js";
+import { router as wordsRouter } from "./routes/words.routes.js";
 import { router as userRouter } from "./routes/user.routes.js";
 import { router as rewardsRouter } from "./routes/rewards.routes.js";
 
@@ -62,6 +63,7 @@ function createApp() {
         "/api/user/learning-profile",
         "/api/user/home-summary",
         "/api/admin/import-words",
+        "/api/words/translate",
       ],
     });
   });
@@ -85,7 +87,7 @@ function createApp() {
   app.use("/api/user", userRouter);
   app.use("/api/rewards", rewardsRouter);
   app.use("/api/admin", adminImportRouter);
-
+  app.use("/api/words", wordsRouter);
   app.use(errorMiddleware);
 
   return app;
