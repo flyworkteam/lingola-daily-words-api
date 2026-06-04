@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import morgan from "morgan";
 import { env } from "./config/env.js";
+import { getFirebaseAdminStatus } from "./auth/firebase-admin.js";
 import { checkDatabaseHealth } from "./health/check.js";
 import { errorMiddleware } from "./http/error-middleware.js";
 import { router as v1Router } from "./routes/index.js";
@@ -70,11 +71,13 @@ function createApp() {
 
   app.get("/health", async (_req, res) => {
     const db = await checkDatabaseHealth();
+    const firebase = getFirebaseAdminStatus();
     const status = db.ok ? 200 : 503;
     return res.status(status).json({
       ok: db.ok,
       database: db.database,
       latencyMs: db.latencyMs,
+      firebase,
       ...(db.error ? { error: db.error } : {}),
     });
   });

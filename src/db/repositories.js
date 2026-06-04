@@ -18,33 +18,21 @@ export async function upsertUserFromFirebase({
   provider,
   lastLoginAt,
 }) {
-  const existing = await findUserByFirebaseUid(firebaseUid);
-  if (existing) {
-    await query(
-      `UPDATE \`User\` SET email = ?, displayName = ?, photoUrl = ?, provider = ?, lastLoginAt = ?, updatedAt = ? WHERE id = ?`,
-      [email, displayName, photoUrl, provider, lastLoginAt, now(), existing.id],
-    );
-    return { ...existing, email, displayName, photoUrl, provider, lastLoginAt };
-  }
-
   const id = generateId();
-  const createdAt = now();
+  const ts = now();
   await query(
     `INSERT INTO \`User\` (id, firebaseUid, email, displayName, photoUrl, provider, createdAt, updatedAt, lastLoginAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [id, firebaseUid, email, displayName, photoUrl, provider, createdAt, createdAt, lastLoginAt],
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       email = COALESCE(VALUES(email), email),
+       displayName = COALESCE(VALUES(displayName), displayName),
+       photoUrl = COALESCE(VALUES(photoUrl), photoUrl),
+       provider = VALUES(provider),
+       lastLoginAt = VALUES(lastLoginAt),
+       updatedAt = VALUES(updatedAt)`,
+    [id, firebaseUid, email, displayName, photoUrl, provider, ts, ts, lastLoginAt],
   );
-  return {
-    id,
-    firebaseUid,
-    email,
-    displayName,
-    photoUrl,
-    provider,
-    createdAt,
-    updatedAt: createdAt,
-    lastLoginAt,
-  };
+  return findUserByFirebaseUid(firebaseUid);
 }
 
 // --- User learning profile ---
