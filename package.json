@@ -12,6 +12,9 @@
     "production:setup": "npm run db:migrate && npm run db:seed",
     "admin:import-all": "node scripts/admin-import-all-levels.js",
     "import:c1-c2": "node scripts/import-c1-c2-words.js",
+    "import:all": "node scripts/import-all-words.js && node scripts/import-all-translations.js",
+    "import:translations": "node scripts/import-all-translations.js",
+    "db:export-local": "bash scripts/export-local-db.sh",
     "seed:words": "node scripts/seed-words.js",
     "package:customer": "bash scripts/package-for-customer.sh"
   },

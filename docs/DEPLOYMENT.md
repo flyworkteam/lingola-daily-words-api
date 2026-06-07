@@ -54,10 +54,24 @@ curl -s http://127.0.0.1:3000/health
 
 ## 3. Kelimeleri veritabanına alma
 
-Harici API’den tüm seviyeleri içe aktarma (sunucuda, API çalışırken):
+**Tam sözlük (~28k kelime, A1–B2)** — sunucuda `.env` içinde `VERB_API_*` tanımlı olmalı:
+
+```bash
+npm run import:all
+```
+
+Eski yöntem (seviye başına ~300 kelime, yetersiz):
 
 ```bash
 npm run admin:import-all
+```
+
+Yerel Mac'ten dump ile aktarma (`.env.local` + yerel MySQL dolu ise):
+
+```bash
+npm run db:export-local
+# scp dist/lingoladailywords-local.sql müşteri sunucusuna
+# sunucuda: mysql ... lingoladailywords < dosya.sql
 ```
 
 Tek seviye:
@@ -92,5 +106,5 @@ Bkz. [FLUTTER.md](./FLUTTER.md)
 | `EADDRNOTAVAIL` | `HOST` MySQL IP’si olmamalı → `0.0.0.0` |
 | `database: down` / `ETIMEDOUT` | Sunucuda `127.0.0.1` kullanın; Mac’ten uzak DB için IP whitelist |
 | Flutter `Unauthorized` | Önce `/api/v1/auth/session` çağrılmalı |
-| Boş kelime listesi | `npm run production:setup` ve `npm run admin:import-all` |
+| Boş kelime listesi | `npm run production:setup` ve `npm run import:all` |
 | `No vocabulary for daily word` | A1 + `targetLang=tr` için import yapılmamış |

@@ -56,7 +56,8 @@ Mobil uygulama API adresi: `http://<bilgisayar-ip>:3000` (simülatörde genelde 
 
 ```bash
 npm run production:setup   # sunucuda: migrate + örnek kelimeler
-npm run admin:import-all # harici API'den tüm seviyeleri içe aktar
+npm run admin:import-all # eski: seviye başına ~300 kelime
+npm run import:all     # tam sözlük ~28k (A1–B2)
 ```
 
 ## Veritabanı

@@ -82,10 +82,10 @@ pm2 startup
 API çalışırken aynı klasörde:
 
 ```bash
-npm run admin:import-all
+npm run import:all
 ```
 
-Bu işlem birkaç dakika sürebilir.
+(Tam sözlük ~28k kelime, A1–B2. Eski `admin:import-all` yalnızca ~1k kelime çeker.)
 
 ## 7. Dış erişim testi
 
@@ -102,7 +102,7 @@ Uygulama adresi: **`http://5.39.8.160:3000`** (HTTPS kurulduysa `https://...`)
 Kurulum tamamlandığında geliştiriciye şu çıktıyı iletin:
 
 - `curl http://127.0.0.1:3000/health` sonucu
-- `npm run admin:import-all` son satırı (başarılı mı)
+- `npm run import:all` son satırı (başarılı mı)
 
 ## Sık sorunlar
 
@@ -111,4 +111,4 @@ Kurulum tamamlandığında geliştiriciye şu çıktıyı iletin:
 | `EADDRNOTAVAIL` | `.env` içinde `HOST=0.0.0.0` olmalı |
 | `database: down` | `DATABASE_URL` host `127.0.0.1` olmalı; MySQL çalışıyor mu kontrol edin |
 | Dışarıdan `/health` açılmıyor | Port 3000 firewall |
-| Uygulamada kelime yok | `npm run admin:import-all` çalıştırılmamış |
+| Uygulamada kelime yok | `npm run import:all` çalıştırılmamış |

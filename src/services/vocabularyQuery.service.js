@@ -20,10 +20,25 @@ export { buildLevelWhere, buildLevelAndDifficultyWhere };
 const DEFAULT_LEVEL = 'A1';
 
 export async function resolveRequestLanguagePair(req) {
-  if (req.user) {
-    return resolveUserLanguagePair(req.user.id);
+  const fromQuery = resolveLanguagePairFromQuery(req.query);
+  if (!req.user) {
+    return fromQuery;
   }
-  return resolveLanguagePairFromQuery(req.query);
+
+  const fromProfile = await resolveUserLanguagePair(req.user.id);
+  const queryTarget =
+    typeof req.query.targetLang === 'string' && req.query.targetLang.trim().length > 0
+      ? req.query.targetLang.trim()
+      : null;
+
+  if (queryTarget) {
+    return {
+      sourceLang: fromQuery.sourceLang,
+      targetLang: fromQuery.targetLang,
+    };
+  }
+
+  return fromProfile;
 }
 
 export async function resolveVocabularyContext(req) {
