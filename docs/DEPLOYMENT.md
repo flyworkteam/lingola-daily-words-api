@@ -70,7 +70,8 @@ Yerel Mac'ten dump ile aktarma (`.env.local` + yerel MySQL dolu ise):
 
 ```bash
 npm run db:export-local
-# scp dist/lingoladailywords-local.sql müşteri sunucusuna
+# veya repodaki: database/lingoladailywords-local.sql (~28k kelime + çeviriler)
+# scp database/lingoladailywords-local.sql müşteri sunucusuna
 # sunucuda: mysql ... lingoladailywords < dosya.sql
 ```
 

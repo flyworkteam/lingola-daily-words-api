@@ -58,7 +58,10 @@ Mobil uygulama API adresi: `http://<bilgisayar-ip>:3000` (simülatörde genelde 
 npm run production:setup   # sunucuda: migrate + örnek kelimeler
 npm run admin:import-all # eski: seviye başına ~300 kelime
 npm run import:all     # tam sözlük ~28k (A1–B2)
+npm run db:export-local  # yerel dump üretir → database/lingoladailywords-local.sql
 ```
+
+Hazır veri (sunucuya import): `database/lingoladailywords-local.sql` — ~28k kelime, 8 dilde çeviri.
 
 ## Veritabanı
 
